@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 from csv import writer
 from lxml import etree
 
-# get product catalog and append into array
+# Get product catalog and append into array.
 catalog = []
 def get_product_catalog() :
   request = requests.get('https://www.ah.nl/sitemaps/entities/products/detail.xml')
@@ -16,23 +16,32 @@ def get_product_catalog() :
 
 get_product_catalog()
 
-# create csv file
+# Create csv file.
 with open('database.csv', 'w') as csv_file :
-  columns = ['Title', 'Price']
+  columns = ['Title', 'Price root', 'Price promo']
   csv_write = writer(csv_file)
   csv_write.writerow(columns)
 
-# get product info and add into csv file
-# def get_product_info() :
+# Get product info and add into csv file.
   for link in catalog :
     request = requests.get(link)
     soup = BeautifulSoup(request.text, 'lxml')
 
-    # set css classes/ids
+    # Set css classes/ids.
     target_selector_title = 'line-clamp_root__1FX_J line-clamp_active__Yb_HA'
-    target_selector_price = 'price-amount_root__37xv2 product-card-hero-price_now__PlF9u'
+    target_selector_price_root = 'price-amount_root__37xv2 product-card-hero-price_now__PlF9u'
+    target_selector_price_promo_now = 'price-amount_root__37xv2 price-amount_bonus__27nxZ product-card-hero-price_now__PlF9u'
+    target_selector_price_promo_prev = 'price-amount_root__37xv2 price-amount_was__1PrUY product-card-hero-price_was__1ZNtq'
 
-    title = soup.find(class_='line-clamp_root__1FX_J line-clamp_active__Yb_HA').get_text().strip()
-    price = soup.find(class_='price-amount_root__37xv2 product-card-hero-price_now__PlF9u').get_text().strip()
-    print([title, price,])
-    csv_write.writerow([title, price,])
+    title = soup.find(class_=target_selector_title)
+    title = title.get_text().strip()
+    price_now = soup.find(class_=target_selector_price_root)
+    price_prev = 'null'
+    if price_now == None :
+      price_now = soup.find(class_=target_selector_price_promo_now)
+      price_prev = soup.find(class_=target_selector_price_promo_prev)
+    price_now = price_now.get_text().strip()
+    if price_prev != 'null' :
+      price_prev = price_prev.get_text().strip()
+    print([title, price_now, price_prev])
+    csv_write.writerow([title, price_now, price_prev])
