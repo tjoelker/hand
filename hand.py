@@ -15,23 +15,24 @@ def get_product_catalog() :
   return catalog
 
 get_product_catalog()
-print(catalog)
 
-# search_query_url = 'https://www.ah.nl/zoeken?query=cola&soort=1007'
+# create csv file
+with open('database.csv', 'w') as csv_file :
+  columns = ['Title', 'Price']
+  csv_write = writer(csv_file)
+  csv_write.writerow(columns)
 
-# request = requests.get(search_query_url)
+# get product info and add into csv file
+# def get_product_info() :
+  for link in catalog :
+    request = requests.get(link)
+    soup = BeautifulSoup(request.text, 'lxml')
 
-# soup = BeautifulSoup(request.text, 'html.parser')
+    # set css classes/ids
+    target_selector_title = 'line-clamp_root__1FX_J line-clamp_active__Yb_HA'
+    target_selector_price = 'price-amount_root__37xv2 product-card-hero-price_now__PlF9u'
 
-# products = soup.find_all(class_='product-card-portrait_root__sZL4I product-grid-lane_gridItem__eqh9g')
-
-# with open('database.csv', 'w') as csv_file:
-#   csv_writer = writer(csv_file)
-#   collumns = ['Title', 'Price']
-#   csv_writer.writerow(collumns)
-
-#   for product in products:
-#     title = product.find(class_='line-clamp_root__1FX_J line-clamp_active__Yb_HA title_lineclamp__1dS7X').get_text().strip()
-#     price = product.find(class_='price-amount_root__37xv2 price-amount_highlight__3WjBM price_amount__2Gk9i price_highlight__3B97G').get_text().strip()
-#     print([title, price,])
-#     csv_writer.writerow([title, price,])
+    title = soup.find(class_='line-clamp_root__1FX_J line-clamp_active__Yb_HA').get_text().strip()
+    price = soup.find(class_='price-amount_root__37xv2 product-card-hero-price_now__PlF9u').get_text().strip()
+    print([title, price,])
+    csv_write.writerow([title, price,])
