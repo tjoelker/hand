@@ -12,17 +12,23 @@ def get_product_catalog() :
   product_catalog = soup.find_all('loc')
   for product in product_catalog :
     catalog.append(product.get_text())
-
+  
   return catalog
 
 get_product_catalog()
 
+print('- - - - - - - - - - - - - - - - -')
+print(f'Amount of products to crawl: {format(len(catalog))}')
+print('- - - - - - - - - - - - - - - - -')
+
 # Create csv file with all product data.
 with open('database.csv', 'w') as csv_file :
   # Set csv headings
-  columns = ['title', 'price_root', 'price_promo', 'content', 'ingredients',]
+  columns = ['title', 'price_now', 'price_prev', 'promo', 'content', 'ingredients',]
   csv_write = writer(csv_file)
   csv_write.writerow(columns)
+
+  i = 0
 
 # Get product info and add into csv file.
   for link in catalog :
@@ -34,6 +40,7 @@ with open('database.csv', 'w') as csv_file :
     target_selector_price_root = 'price-amount_root__37xv2 product-card-hero-price_now__PlF9u'
     target_selector_price_promo_now = 'price-amount_root__37xv2 price-amount_bonus__27nxZ product-card-hero-price_now__PlF9u'
     target_selector_price_promo_prev = 'price-amount_root__37xv2 price-amount_was__1PrUY product-card-hero-price_was__1ZNtq'
+    target_selector_promo = 'promo-sticker_content__IuLKu'
     target_selector_content = 'product-card-header_unitInfo__2ncbP'
     target_selector_ingredients = 'typography_root__18FkK typography_variant-paragraph__33rgM typography_hasMargin__26L1z'
 
@@ -49,15 +56,33 @@ with open('database.csv', 'w') as csv_file :
     if price_now == None :
       price_now = soup.find(class_=target_selector_price_promo_now)
       price_prev = soup.find(class_=target_selector_price_promo_prev)
-    price_now = price_now.get_text().strip()
+
+      if price_now == None :
+        price_now = 'null'
+
+      if price_prev == None :
+        price_prev = 'null'
+
+    if price_now != None :
+      price_now = price_now.get_text().strip()
     if price_prev != 'null' :
       price_prev = price_prev.get_text().strip()
+
+    # Promo
+    promo = soup.find(class_=target_selector_promo)
+    if promo != None :
+      promo = promo.get_text().strip()
+    else :
+      promo = 'null'
+    
+    promo = promo.replace(u'\n', u' ')
 
     # Content
     content = soup.find(class_=target_selector_content)
     span = content.span
     if span != None :
       content.span.decompose()
+    
     content = content.get_text().strip()
     
     # Ingredients
@@ -79,8 +104,9 @@ with open('database.csv', 'w') as csv_file :
         else :
           continue
     
+    i += 1
     # Print link data into csv file
-    product = [title, price_now, price_prev, content, ingredients,]
+    product = [title, price_now, price_prev, promo, content, ingredients,]
+    print(f'[{i}/{format(len(catalog))}]')
     print(product)
-    print('')
     csv_write.writerow(product)
